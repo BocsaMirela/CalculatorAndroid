@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout>
+
+    <data>
+
+        <variable
+                name="viewModel"
+                type="com.example.calculator.ui.model.ICalculatorViewModel"/>
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                                                       xmlns:app="http://schemas.android.com/apk/res-auto"
+                                                       xmlns:tools="http://schemas.android.com/tools"
+                                                       android:layout_width="match_parent"
+                                                       android:layout_height="match_parent">
+
+        <TextView
+                android:id="@+id/input"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:background="@color/light_grey"
+                android:maxLength="100"
+                android:lines="6"
+                android:padding="@dimen/default_margin"
+                android:gravity="end|center_vertical"
+                android:focusable="true"
+                android:text="@{viewModel.compute}"
+                android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+                app:layout_constraintBottom_toTopOf="@id/result"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintRight_toRightOf="parent"
+                android:textSize="30sp"
+                tools:text="1234+456789.0"/>
+
+        <TextView
+                android:id="@+id/result"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/light_grey"
+                android:padding="@dimen/default_margin"
+                android:textSize="25sp"
+                android:gravity="end|center_vertical"
+                android:text="@{viewModel.result}"
+                android:textStyle="normal"
+                app:layout_constraintBottom_toTopOf="@id/tabs"
+                app:layout_constraintTop_toBottomOf="@id/input"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintRight_toRightOf="parent"
+                tools:text="123456.89"/>
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/tabs"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/ic_border_up"
+                app:layout_constraintTop_toBottomOf="@id/result"
+                app:layout_constraintBottom_toTopOf="@id/guideline"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintRight_toRightOf="parent">
+
+            <Button
+                    android:id="@+id/history"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:text="@string/history"
+                    android:textSize="20sp"
+                    android:textColor="@color/black"
+                    android:background="?selectableItemBackground"
+                    android:padding="@dimen/default_margin"
+                    android:textAppearance="@style/Widget.MaterialComponents.Button.TextButton"
+                    android:textAllCaps="true"
+                    android:alpha="0.6"
+                    android:onClick="@{()-> viewModel.onHistory()}"
+                    app:layout_constraintLeft_toLeftOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"/>
+
+            <Button
+                    android:id="@+id/all"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:background="?selectableItemBackground"
+                    android:text="@string/ee"
+                    android:textSize="20sp"
+                    android:textColor="@color/black"
+                    android:padding="@dimen/default_margin"
+                    android:alpha="0.6"
+                    android:onClick="@{()->viewModel.onEE()}"
+                    android:textAppearance="@style/Widget.MaterialComponents.Button.TextButton"
+                    app:layout_constraintLeft_toRightOf="@id/history"
+                    app:layout_constraintStart_toEndOf="@id/history"
+                    app:layout_constraintTop_toTopOf="parent"/>
+
+            <ImageButton
+                    android:id="@+id/back"
+                    android:layout_width="80dp"
+                    android:layout_height="0dp"
+                    android:backgroundTint="@color/light_grey"
+                    android:tint="@color/light_sky_blue"
+                    app:srcCompat="@drawable/ic_outline_backspace_24px"
+                    android:background="?selectableItemBackground"
+                    android:onClick="@{()->viewModel.onBack()}"
+                    android:enabled="@{viewModel.enable}"
+                    app:layout_constraintRight_toRightOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"/>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <FrameLayout
+                android:id="@+id/container"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:background="@color/light_grey"
+                app:layout_constraintTop_toBottomOf="@id/guideline"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintRight_toRightOf="parent">
+
+        </FrameLayout>
+
+        <androidx.constraintlayout.widget.Guideline
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:layout_constraintGuide_percent="0.55"
+                android:id="@+id/guideline"/>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>
