@@ -99,7 +99,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
-        outState.putString(KEY_COMPUTE, viewModel.compute.value.toString())
+        outState.putString(KEY_COMPUTE, viewModel.compute.value)
         outState.putString(KEY_RESULT, viewModel.result.value)
     }
 

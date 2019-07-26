@@ -13,8 +13,7 @@ import com.example.calculator.ui.model.IInputViewModel
 open class InputAdapter(private val context: Context) : BindingBaseAdapter<IInputViewModel, InputViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): InputViewHolder {
-        val binding = DataBindingUtil.inflate<ItemBinding>(LayoutInflater.from(context),
-            R.layout.item, parent, false)
+        val binding = DataBindingUtil.inflate<ItemBinding>(LayoutInflater.from(context), R.layout.item, parent, false)
         return InputViewHolder(binding)
     }
 

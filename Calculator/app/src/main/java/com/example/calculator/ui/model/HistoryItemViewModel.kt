@@ -7,16 +7,16 @@ interface IHistoryItemViewModel {
     fun onResultClick()
 }
 
-class HistoryItemViewModel(override val compute: String, private val equal: String,
-    private val computeClick: (item: String) -> Unit, private val resultClick: (item: String) -> Unit) : IHistoryItemViewModel {
+class HistoryItemViewModel(override val compute: String, equal: String,
+    private val computeClick: () -> Unit, private val resultClick: () -> Unit) : IHistoryItemViewModel {
 
     override val result: String = "=$equal"
 
     override fun onComputeClick() {
-        computeClick.invoke(compute)
+        computeClick.invoke()
     }
 
     override fun onResultClick() {
-        resultClick.invoke(equal)
+        resultClick.invoke()
     }
 }

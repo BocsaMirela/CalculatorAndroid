@@ -17,10 +17,7 @@ interface IHistoryViewModel {
     fun onClear()
 }
 
-class HistoryViewModel(
-    private val historyRepository: IHistoryRepository,
-    private val calculatorManager: ICalculatorManager
-) : IHistoryViewModel, ViewModel() {
+class HistoryViewModel(private val historyRepository: IHistoryRepository, private val calculatorManager: ICalculatorManager) : IHistoryViewModel, ViewModel() {
 
     override val items: MutableLiveData<List<HistoryItemViewModel>> by lazy { MutableLiveData<List<HistoryItemViewModel>>() }
 
@@ -44,10 +41,7 @@ class HistoryViewModel(
 
 }
 
-class HistoryViewModelFactory(
-    private val historyRepository: IHistoryRepository,
-    private val calculatorManager: ICalculatorManager
-) : ViewModelProvider.Factory {
+class HistoryViewModelFactory(private val historyRepository: IHistoryRepository, private val calculatorManager: ICalculatorManager) : ViewModelProvider.Factory {
 
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel?> create(modelClass: Class<T>): T {
