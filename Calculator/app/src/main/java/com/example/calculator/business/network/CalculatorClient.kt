@@ -10,8 +10,8 @@ interface CalculatorClient {
     @GET("numbers")
     fun getNumbers(): Single<List<Entity>>
 
-    @GET("science/{number}")
-    fun getScientific(@Path("number") howMany: Int): Single<List<Entity>>
+    @GET("science")
+    fun getScientific(): Single<List<Entity>>
 
     @GET("operators")
     fun getOperators(): Single<List<Entity>>

@@ -9,11 +9,11 @@ class ScientificViewModel(private val manager: ICalculatorManager) : KeyboardVie
 
     init {
         progress.postValue(true)
-        manager.getScientific(15).mergeWith(manager.getNumbers()).subscribeBy(onNext = { inputs ->
+        manager.getScientific().mergeWith(manager.getNumbers()).subscribeBy(onNext = { inputs ->
             mapInput(inputs.sortedBy { it.order })
             progress.postValue(false)
         }, onError = {
-            mapInput(manager.getDummyScientific(15).plus(manager.getDummyNumbers()).sortedBy { it.order })
+            mapInput(manager.getDummyScientific().plus(manager.getDummyNumbers()).sortedBy { it.order })
             progress.postValue(false)
         })
     }

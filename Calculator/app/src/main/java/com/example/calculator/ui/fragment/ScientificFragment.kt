@@ -28,8 +28,6 @@ class ScientificFragment : BaseFragment() {
     @Inject
     internal lateinit var manager: ICalculatorManager
 
-    private lateinit var updateDelegate: IUpdateDelegate
-
     private val viewModel: IKeyboardViewModel by lazy {
         val factory = ScientificViewModelFactory(manager)
         ViewModelProvider(this, factory).get(ScientificViewModel::class.java)
@@ -37,11 +35,6 @@ class ScientificFragment : BaseFragment() {
 
     override fun onAttach(context: Context) {
         (context.applicationContext as CalculatorApplication).applicationComponent.inject(this)
-        if (parentFragment is IUpdateDelegate) {
-            updateDelegate = parentFragment as IUpdateDelegate
-        } else if (context is IUpdateDelegate) {
-            updateDelegate = context
-        }
         super.onAttach(context)
     }
 
@@ -56,13 +49,5 @@ class ScientificFragment : BaseFragment() {
         binding.viewModel = viewModel
 
         return binding.root
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
-        viewModel.update.observe(this, Observer {
-            updateDelegate.update(it)
-        })
     }
 }

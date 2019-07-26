@@ -12,6 +12,8 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.calculator.CalculatorApplication
 import com.example.calculator.R
+import com.example.calculator.business.manager.CalculatorManager
+import com.example.calculator.business.manager.ICalculatorManager
 import com.example.calculator.business.repository.IHistoryRepository
 import com.example.calculator.databinding.HistoryBinding
 import com.example.calculator.ui.adapter.HistoryAdapter
@@ -23,29 +25,21 @@ import com.grzegorzojdana.spacingitemdecoration.Spacing
 import com.grzegorzojdana.spacingitemdecoration.SpacingItemDecoration
 import javax.inject.Inject
 
-interface IHistoryDelegate {
-    fun history(value: String)
-}
-
 class HistoryFragment : BaseFragment() {
 
     @Inject
     internal lateinit var historyRepository: IHistoryRepository
 
-    private lateinit var historyDelegate: IHistoryDelegate
+    @Inject
+    internal lateinit var calculatorManager: ICalculatorManager
 
     val viewModel: IHistoryViewModel by lazy {
-        val factory = HistoryViewModelFactory(historyRepository)
+        val factory = HistoryViewModelFactory(historyRepository, calculatorManager)
         ViewModelProvider(this, factory).get(HistoryViewModel::class.java)
     }
 
     override fun onAttach(context: Context) {
         (context.applicationContext as CalculatorApplication).applicationComponent.inject(this)
-        if (parentFragment is IUpdateDelegate) {
-            historyDelegate = parentFragment as IHistoryDelegate
-        } else if (context is IHistoryDelegate) {
-            historyDelegate = context
-        }
         super.onAttach(context)
     }
 
@@ -61,18 +55,6 @@ class HistoryFragment : BaseFragment() {
                     ))))
         binding.viewModel = viewModel
         return binding.root
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
-        viewModel.resultUpdate.observe(this, Observer {
-            historyDelegate.history(it)
-        })
-
-        viewModel.computeUpdate.observe(this, Observer {
-            historyDelegate.history(it)
-        })
     }
 }
 

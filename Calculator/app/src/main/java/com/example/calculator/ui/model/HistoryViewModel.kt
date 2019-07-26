@@ -5,6 +5,8 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import com.example.calculator.business.manager.CalculatorManager
+import com.example.calculator.business.manager.ICalculatorManager
 import com.example.calculator.business.repository.IHistoryRepository
 import io.reactivex.rxkotlin.Flowables
 import io.reactivex.rxkotlin.subscribeBy
@@ -17,7 +19,7 @@ interface IHistoryViewModel {
     fun onClear()
 }
 
-class HistoryViewModel(private val historyRepository: IHistoryRepository) : IHistoryViewModel, ViewModel() {
+class HistoryViewModel(private val historyRepository: IHistoryRepository, private val calculatorManager: ICalculatorManager) : IHistoryViewModel, ViewModel() {
 
     override val items: MutableLiveData<List<HistoryItemViewModel>> by lazy { MutableLiveData<List<HistoryItemViewModel>>() }
 
@@ -25,42 +27,32 @@ class HistoryViewModel(private val historyRepository: IHistoryRepository) : IHis
 
     override val resultUpdate: MutableLiveData<String> by lazy { MutableLiveData<String>() }
 
-    private val resultClick: (String) -> Unit = {
-        resultUpdate.postValue(it)
-    }
-
-    private val computeClick: (String) -> Unit = {
-        computeUpdate.postValue(it)
-    }
-
     init {
         historyRepository.histories.subscribeBy(onNext = { list ->
-            Log.e("history", "gel all history success")
             items.postValue(list.map { history ->
                 HistoryItemViewModel(
                     history.compute,
                     history.result,
-                    computeClick,
-                    resultClick
+                    { calculatorManager.setSelectedHistory(history.compute) },
+                    { calculatorManager.setSelectedHistory(history.result) }
                 )
             })
         })
     }
 
     override fun onClear() {
-        historyRepository.deleteAll()
-            .subscribeBy(onError = { Log.e("history", "Delete history failed") }, onComplete = {})
+        historyRepository.deleteAll().subscribeBy(onError = { Log.e("history", "Delete history failed") }, onComplete = {})
     }
 
 
 }
 
-class HistoryViewModelFactory(private val historyRepository: IHistoryRepository) : ViewModelProvider.Factory {
+class HistoryViewModelFactory(private val historyRepository: IHistoryRepository,private val calculatorManager: ICalculatorManager) : ViewModelProvider.Factory {
 
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel?> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(HistoryViewModel::class.java))
-            return HistoryViewModel(historyRepository) as T
+            return HistoryViewModel(historyRepository,calculatorManager) as T
         throw IllegalArgumentException("Unknown ViewModel class")
     }
 

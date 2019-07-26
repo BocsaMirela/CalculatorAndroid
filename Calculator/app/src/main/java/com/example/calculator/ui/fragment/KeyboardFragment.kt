@@ -24,16 +24,11 @@ import com.grzegorzojdana.spacingitemdecoration.Spacing
 import com.grzegorzojdana.spacingitemdecoration.SpacingItemDecoration
 import javax.inject.Inject
 
-interface IUpdateDelegate {
-    fun update(entity: Entity)
-}
-
 class KeyboardFragment : BaseFragment() {
 
     @Inject
     internal lateinit var manager: ICalculatorManager
 
-    private lateinit var updateDelegate: IUpdateDelegate
 
     private val viewModel: IKeyboardViewModel by lazy {
         val factory = KeyboardViewModelFactory(manager)
@@ -42,11 +37,6 @@ class KeyboardFragment : BaseFragment() {
 
     override fun onAttach(context: Context) {
         (context.applicationContext as CalculatorApplication).applicationComponent.inject(this)
-        if (parentFragment is IUpdateDelegate) {
-            updateDelegate = parentFragment as IUpdateDelegate
-        } else if (context is IUpdateDelegate) {
-            updateDelegate = context
-        }
         super.onAttach(context)
     }
 
@@ -63,11 +53,4 @@ class KeyboardFragment : BaseFragment() {
         return binding.root
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
-        viewModel.update.observe(this, Observer {
-            updateDelegate.update(it)
-        })
-    }
 }

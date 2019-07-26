@@ -1,6 +1,5 @@
 package com.example.calculator.ui.model
 
-import android.app.Activity
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -13,7 +12,6 @@ import io.reactivex.rxkotlin.subscribeBy
 interface IKeyboardViewModel {
     val items: LiveData<List<INumberViewModel>>
     val progress: LiveData<Boolean>
-    val update: LiveData<Entity>
 }
 
 open class KeyboardViewModel(private val manager: ICalculatorManager) : IKeyboardViewModel, ViewModel() {
@@ -22,17 +20,8 @@ open class KeyboardViewModel(private val manager: ICalculatorManager) : IKeyboar
 
     final override val progress: MutableLiveData<Boolean> by lazy { MutableLiveData<Boolean>() }
 
-    override val update: MutableLiveData<Entity> by lazy { MutableLiveData<Entity>() }
-
-    private val itemClick: (Entity) -> Unit = { value ->
-        update.postValue(value)
-    }
-
     init {
         progress.postValue(true)
-        when {
-
-        }
         manager.getNumbers().subscribeBy(onSuccess = { inputs ->
             mapInput(inputs.sortedBy { it.order })
             progress.postValue(false)
@@ -49,22 +38,19 @@ open class KeyboardViewModel(private val manager: ICalculatorManager) : IKeyboar
                     entity.type == Entity.Type.CLEAR -> NumberViewModel(
                         entity,
                         R.color.red,
-                        R.color.white,
-                        itemClick
-                    )
+                        R.color.white
+                    ) { manager.setSelectedInput(entity) }
                     entity.type == Entity.Type.EQUAL -> NumberViewModel(
                         entity,
                         R.color.white,
-                        R.color.light_sky_blue,
-                        itemClick
-                    )
+                        R.color.light_sky_blue
+                    ) { manager.setSelectedInput(entity) }
                     entity.type == Entity.Type.OPERATOR -> NumberViewModel(
                         entity,
                         R.color.light_sky_blue,
-                        R.color.white,
-                        itemClick
-                    )
-                    else -> NumberViewModel(entity, R.color.black, R.color.white, itemClick)
+                        R.color.white
+                    ) { manager.setSelectedInput(entity) }
+                    else -> NumberViewModel(entity, R.color.black, R.color.white) { manager.setSelectedInput(entity) }
                 }
             }
         items.postValue(result)

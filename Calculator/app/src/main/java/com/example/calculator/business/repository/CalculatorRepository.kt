@@ -7,10 +7,10 @@ import io.reactivex.Single
 interface ICalculatorRepository {
     fun getNumbers(): Single<List<Entity>>
     fun getOperators(): Single<List<Entity>>
-    fun getScientific(howMany: Int): Single<List<Entity>>
+    fun getScientific(): Single<List<Entity>>
     fun getDummyNumbers(): List<Entity>
     fun getDummyOperators(): List<Entity>
-    fun getDummyScientific(howMany: Int): List<Entity>
+    fun getDummyScientific(): List<Entity>
 }
 
 
@@ -23,8 +23,8 @@ class CalculatorRepository(private val calculatorClient: CalculatorClient) : ICa
         return calculatorClient.getNumbers()
     }
 
-    override fun getScientific(howMany: Int): Single<List<Entity>> {
-        return calculatorClient.getScientific(howMany)
+    override fun getScientific(): Single<List<Entity>> {
+        return calculatorClient.getScientific()
     }
 
     override fun getDummyOperators(): List<Entity> {
@@ -69,7 +69,7 @@ class CalculatorRepository(private val calculatorClient: CalculatorClient) : ICa
         )
     }
 
-    override fun getDummyScientific(howMany: Int): List<Entity> {
+    override fun getDummyScientific(): List<Entity> {
         return listOf(
             Entity("sqrt", 1, Entity.Type.TRIGO),
             Entity("sin", 2, Entity.Type.TRIGO),

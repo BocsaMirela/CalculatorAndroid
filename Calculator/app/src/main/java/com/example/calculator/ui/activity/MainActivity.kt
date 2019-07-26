@@ -9,6 +9,8 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import com.example.calculator.CalculatorApplication
 import com.example.calculator.R
+import com.example.calculator.business.manager.CalculatorManager
+import com.example.calculator.business.manager.ICalculatorManager
 import com.example.calculator.business.model.Entity
 import com.example.calculator.business.repository.IHistoryRepository
 import com.example.calculator.databinding.ActivityMainBinding
@@ -19,13 +21,16 @@ import com.example.calculator.ui.model.ICalculatorViewModel
 import org.jetbrains.anko.toast
 import javax.inject.Inject
 
-class MainActivity : AppCompatActivity(), IUpdateDelegate, IHistoryDelegate {
+class MainActivity : AppCompatActivity() {
 
     @Inject
     internal lateinit var historyRepository: IHistoryRepository
 
+    @Inject
+    internal lateinit var calculatorManager: ICalculatorManager
+
     private val viewModel: ICalculatorViewModel by lazy {
-        val factory = CalculatorViewModelFactory(historyRepository)
+        val factory = CalculatorViewModelFactory(historyRepository, calculatorManager)
         ViewModelProvider(this, factory).get(CalculatorViewModel::class.java)
     }
 
@@ -89,14 +94,6 @@ class MainActivity : AppCompatActivity(), IUpdateDelegate, IHistoryDelegate {
 
     private fun portrait(): Boolean {
         return this.resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT
-    }
-
-    override fun update(entity: Entity) {
-        viewModel.onUpdate(entity)
-    }
-
-    override fun history(value: String) {
-        viewModel.historyClicked(value)
     }
 
     override fun onSaveInstanceState(outState: Bundle) {

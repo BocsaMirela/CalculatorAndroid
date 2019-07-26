@@ -21,16 +21,4 @@ class NumberViewModel(
     override fun onClick() {
         itemClick.invoke(entity)
     }
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as NumberViewModel
-
-        if (entity != other.entity) return false
-        return true
-    }
-
-
 }

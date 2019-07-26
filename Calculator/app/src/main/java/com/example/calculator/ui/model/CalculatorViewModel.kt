@@ -5,23 +5,21 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import io.reactivex.rxkotlin.subscribeBy
-import javax.script.ScriptEngine
-import javax.script.ScriptEngineManager
 import android.text.SpannableString
 import android.graphics.Color
 import android.text.SpannableStringBuilder
 import android.text.Spanned
 import android.text.style.ForegroundColorSpan
 import android.util.Log
+import com.example.calculator.business.manager.CalculatorManager
+import com.example.calculator.business.manager.ICalculatorManager
 import com.example.calculator.business.model.Entity
 import com.example.calculator.business.model.History
 import com.example.calculator.business.repository.IHistoryRepository
 import com.example.calculator.ui.model.event.SingleLiveEvent
 import com.example.calculator.util.factorial
 import com.example.calculator.util.toSpannableString
-import net.objecthunter.exp4j.Expression
 import net.objecthunter.exp4j.ExpressionBuilder
-import net.objecthunter.exp4j.operator.Operator
 
 
 interface ICalculatorViewModel {
@@ -31,14 +29,13 @@ interface ICalculatorViewModel {
     val enable: LiveData<Boolean>
     val history: LiveData<Boolean>
     val ee: SingleLiveEvent<Void>
-    fun onUpdate(entity: Entity)
     fun onHistory()
     fun onEE()
     fun onBack()
-    fun historyClicked(value: String)
 }
 
-class CalculatorViewModel(private val historyRepository: IHistoryRepository) : ICalculatorViewModel, ViewModel() {
+class CalculatorViewModel(private val historyRepository: IHistoryRepository, calculatorManager: ICalculatorManager) :
+    ICalculatorViewModel, ViewModel() {
 
     override val compute: MutableLiveData<SpannableString> by lazy { MutableLiveData<SpannableString>() }
 
@@ -57,7 +54,7 @@ class CalculatorViewModel(private val historyRepository: IHistoryRepository) : I
     private var equal: Boolean = false
     private var parentheses = 0
 
-    override fun onUpdate(entity: Entity) {
+    private fun itemClicked(entity: Entity) {
         when {
             entity.type == Entity.Type.EQUAL -> {
                 if (compute.value != null) {
@@ -65,7 +62,13 @@ class CalculatorViewModel(private val historyRepository: IHistoryRepository) : I
                     if (old.last().toString().matches(regex))
                         error.postValue(true)
                     else if (operator) {
-                        val resultC = ExpressionBuilder(old.toString()).build().evaluate().toString()
+                        val text = SpannableStringBuilder(old)
+                        var continueP = parentheses
+                        while (continueP > 0) {
+                            text.append(")")
+                            continueP--
+                        }
+                        val resultC = ExpressionBuilder(text.toString()).build().evaluate().toString()
                         val spannedText = SpannableString(resultC).apply {
                             setSpan(
                                 ForegroundColorSpan(Color.parseColor("#1874CD")),
@@ -114,7 +117,7 @@ class CalculatorViewModel(private val historyRepository: IHistoryRepository) : I
                 else entity.value
                 val old = compute.value ?: ""
                 val text = SpannableStringBuilder(old)
-                if (old.isNotEmpty() && old.last().toString().matches(regex))
+                if (old.isNotEmpty() && old.last().isDigit())
                     text.append("*")
                 text.append(value).append("(")
                 compute.postValue(SpannableString(text))
@@ -240,6 +243,11 @@ class CalculatorViewModel(private val historyRepository: IHistoryRepository) : I
         }
     }
 
+    init {
+        calculatorManager.getSelectedInput().subscribeBy(onNext = { entity -> itemClicked(entity) })
+        calculatorManager.getSelectedHistory().subscribeBy(onNext = { historyClicked(it) })
+    }
+
     private fun evaluate(expr: String) {
         val expression = ExpressionBuilder(expr).build()
         result.postValue(expression.evaluate().toString())
@@ -268,7 +276,7 @@ class CalculatorViewModel(private val historyRepository: IHistoryRepository) : I
         ee.postValue(null)
     }
 
-    override fun historyClicked(value: String) {
+    private fun historyClicked(value: String) {
         val old = compute.value ?: ""
         compute.postValue(SpannableString(SpannableStringBuilder(old).append(value)))
         enable.postValue(true)
@@ -281,12 +289,15 @@ class CalculatorViewModel(private val historyRepository: IHistoryRepository) : I
 
 }
 
-class CalculatorViewModelFactory(private val historyRepository: IHistoryRepository) : ViewModelProvider.Factory {
+class CalculatorViewModelFactory(
+    private val historyRepository: IHistoryRepository,
+    private val calculatorManager: ICalculatorManager
+) : ViewModelProvider.Factory {
 
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel?> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(CalculatorViewModel::class.java)) {
-            return CalculatorViewModel(historyRepository) as T
+            return CalculatorViewModel(historyRepository, calculatorManager) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }
