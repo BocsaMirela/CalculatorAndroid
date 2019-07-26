@@ -3,6 +3,7 @@ package com.example.calculator.ui.activity
 import android.content.pm.ActivityInfo
 import android.content.res.Configuration
 import android.os.Bundle
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.Observer
@@ -59,7 +60,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         viewModel.error.observe(this, Observer {
-            applicationContext!!.toast("Invalid format")
+            applicationContext!!.toast(R.string.invalid)
         })
 
         viewModel.history.observe(this, Observer {

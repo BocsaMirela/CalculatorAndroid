@@ -11,7 +11,8 @@ import android.text.SpannableStringBuilder
 import android.text.Spanned
 import android.text.style.ForegroundColorSpan
 import android.util.Log
-import com.example.calculator.business.manager.CalculatorManager
+import androidx.core.graphics.toColor
+import com.example.calculator.R
 import com.example.calculator.business.manager.ICalculatorManager
 import com.example.calculator.business.model.Entity
 import com.example.calculator.business.model.History
@@ -23,7 +24,7 @@ import net.objecthunter.exp4j.ExpressionBuilder
 
 
 interface ICalculatorViewModel {
-    val compute: LiveData<SpannableString>
+    val compute: LiveData<String>
     val result: LiveData<String>
     val error: LiveData<Boolean>
     val enable: LiveData<Boolean>
@@ -37,7 +38,7 @@ interface ICalculatorViewModel {
 class CalculatorViewModel(private val historyRepository: IHistoryRepository, calculatorManager: ICalculatorManager) :
     ICalculatorViewModel, ViewModel() {
 
-    override val compute: MutableLiveData<SpannableString> by lazy { MutableLiveData<SpannableString>() }
+    override val compute: MutableLiveData<String> by lazy { MutableLiveData<String>() }
 
     override val result: MutableLiveData<String> by lazy { MutableLiveData<String>() }
 
@@ -54,198 +55,192 @@ class CalculatorViewModel(private val historyRepository: IHistoryRepository, cal
     private var equal: Boolean = false
     private var parentheses = 0
 
-    private fun itemClicked(entity: Entity) {
-        when {
-            entity.type == Entity.Type.EQUAL -> {
-                if (compute.value != null) {
-                    val old = compute.value!!
-                    if (old.last().toString().matches(regex))
-                        error.postValue(true)
-                    else if (operator) {
-                        val text = SpannableStringBuilder(old)
-                        var continueP = parentheses
-                        while (continueP > 0) {
-                            text.append(")")
-                            continueP--
-                        }
-                        val resultC = ExpressionBuilder(text.toString()).build().evaluate().toString()
-                        val spannedText = SpannableString(resultC).apply {
-                            setSpan(
-                                ForegroundColorSpan(Color.parseColor("#1874CD")),
-                                0,
-                                resultC.length,
-                                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
-                            )
-                        }
-                        historyRepository.addHistory(History(old.toString(), resultC))
-                            .subscribeBy(onError = { Log.e("history", "Add history failed") },
-                                onComplete = { Log.e("history", "Add history success") })
-                        compute.postValue(spannedText)
-                        result.postValue("")
-                        operator = false
-                        parentheses = 0
-                        equal = true
-                    }
-                }
-            }
-            entity.type == Entity.Type.CLEAR -> {
-                operator = false
-                parentheses = 0
-                compute.postValue("".toSpannableString())
-                result.postValue("")
-                enable.postValue(false)
-            }
-            entity.type == Entity.Type.PARENTHESES -> {
-                val old = compute.value ?: ""
-                val text = SpannableStringBuilder(old)
-                if (old.isEmpty() || old.last() == '(' || old.last().toString().matches(regex)) {
-                    text.append("(")
-                    parentheses++
-                } else if (parentheses > 0) {
-                    text.append(")")
-                    parentheses--
-                } else {
-                    text.append("*(")
-                    operator = true
-                    parentheses++
-                }
-                compute.postValue(SpannableString(text))
-                enable.postValue(true)
-            }
-            entity.type == Entity.Type.TRIGO -> {
-                val value = if (entity.value === "ctg") "1/tan"
-                else entity.value
-                val old = compute.value ?: ""
-                val text = SpannableStringBuilder(old)
-                if (old.isNotEmpty() && old.last().isDigit())
-                    text.append("*")
-                text.append(value).append("(")
-                compute.postValue(SpannableString(text))
-                enable.postValue(true)
-                operator = true
-                parentheses++
-            }
-            entity.type == Entity.Type.PI || entity.type == Entity.Type.E -> {
-                val old = compute.value ?: ""
-                val text = SpannableStringBuilder(old)
-                if (old.isEmpty() || old.last() == '(')
-                    text.append(entity.value)
-                else
-                    text.append("*").append(entity.value)
-                compute.postValue(SpannableString(text))
-                evaluate(text.toString())
-                enable.postValue(true)
-
-            }
-            entity.type == Entity.Type.POW -> {
-                val old = compute.value ?: ""
-                val text = SpannableStringBuilder(old)
-                if (old.isNotEmpty()) {
-                    if (old.last().isDigit() || old.takeLast(2) == "pi" || old.last() == 'e') {
-                        text.append("^(")
-                        if (entity.value.last().isDigit()) {
-                            text.append(entity.value.last()).append(")")
-                            evaluate(text.toString())
-                        } else
-                            parentheses++
-                        compute.postValue(SpannableString(text))
-                        enable.postValue(true)
-                    } else {
-                        error.postValue(true)
-                    }
-                }
-
-            }
-            entity.type == Entity.Type.MULTIPLE -> {
-                val old = compute.value ?: ""
-                val text = SpannableStringBuilder(old)
-                if (old.isNotEmpty() && old.last().isDigit())
-                    text.append("*")
-                text.append(entity.value.dropLast(1))
-                if (entity.value.endsWith('^')) {
-                    text.append("(")
-                    parentheses++
-                }
-                compute.postValue(SpannableString(text))
-                enable.postValue(true)
-                operator = true
-            }
-            entity.type == Entity.Type.FACT -> {
-                val old = compute.value ?: ""
-                val text = SpannableStringBuilder(old)
-                if (old.isNotEmpty()) {
-                    if (old.last().isDigit()) {
-                        text.append("!")
-                        compute.postValue(SpannableString(text))
-                        val resultE = ExpressionBuilder(text.toString())
-                            .operator(factorial())
-                            .build()
-                            .evaluate()
-                        result.postValue(resultE.toString())
-                        enable.postValue(true)
-                    } else {
-                        error.postValue(true)
-                    }
-                }
-            }
-            entity.value.matches(regex) && compute.value.isNullOrEmpty() -> {
-            }
-            entity.value.matches(regex) && compute.value != null -> {
-                val old = compute.value!!
-                operator = true
-                if (old.last() == '(' && !(entity.value == "-" || entity.value == "+")) {
-                } else if (!(old.last().toString().matches(regex) && old.last().toString() == entity.value)) {
-                    val text = if (old.last().toString().matches(regex) && old.last().toString() != entity.value) {
-                        SpannableStringBuilder(old.dropLast(1))
-                    } else {
-                        SpannableStringBuilder(old)
-                    }
-                    val spannedText = SpannableString(entity.value).apply {
-                        setSpan(
-                            ForegroundColorSpan(Color.parseColor("#1874CD")),
-                            0,
-                            1,
-                            Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
-                        )
-                    }
-                    text.append(spannedText)
-                    compute.postValue(SpannableString(text))
-                    enable.postValue(true)
-                }
-            }
-            !entity.value.matches(regex) && operator -> {
-                val old = compute.value ?: ""
-                val text = SpannableStringBuilder(compute.value!!)
-                if (old.last() == ')')
-                    text.append("*")
-                text.append(entity.value)
-                compute.postValue(SpannableString(text))
-                var continueP = parentheses
-                while (continueP > 0) {
-                    text.append(")")
-                    continueP--
-                }
-                evaluate(text.toString())
-                enable.postValue(true)
-
-            }
-            else -> {
-                val old = compute.value ?: ""
-                var text = SpannableStringBuilder(old)
-                if (equal) {
-                    text = SpannableStringBuilder("")
-                    equal = false
-                } else if (old.toString().isNotEmpty() && old.last() == ')')
-                    text.append("*")
-                compute.postValue(SpannableString(text.append(entity.value)))
-                enable.postValue(true)
-            }
-        }
-    }
 
     init {
         calculatorManager.getSelectedInput().subscribeBy(onNext = { entity -> itemClicked(entity) })
         calculatorManager.getSelectedHistory().subscribeBy(onNext = { historyClicked(it) })
+    }
+
+    private fun itemClicked(entity: Entity) {
+        when {
+            entity.type == Entity.Type.EQUAL -> onEqual()
+            entity.type == Entity.Type.CLEAR -> onClear()
+            entity.type == Entity.Type.PARENTHESES -> onParentheses()
+            entity.type == Entity.Type.TRIGO -> onScientificKeys(entity)
+            entity.type == Entity.Type.PI || entity.type == Entity.Type.E -> onSpecialCharacters(entity)
+            entity.type == Entity.Type.POW -> onPower(entity)
+            entity.type == Entity.Type.MULTIPLE -> onXBehind(entity)
+            entity.type == Entity.Type.FACT -> onFactorial()
+            entity.value.matches(regexOperator) && compute.value.isNullOrEmpty() -> { }
+            entity.value.matches(regexOperator) && compute.value != null -> onOperator(entity)
+            !entity.value.matches(regexOperator) && operator -> onTextAfterOperator(entity)
+            else -> onInput(entity)
+        }
+    }
+
+    private fun onInput(entity: Entity) {
+        var old = compute.value ?: ""
+        if (equal) {
+            old = ""
+            equal = false
+        } else if (old.isNotEmpty() && old.last() == ')')
+            old = "$old*"
+        compute.postValue(old + entity.value)
+        enable.postValue(true)
+    }
+
+    private fun onTextAfterOperator(entity: Entity) {
+        var old = compute.value ?: ""
+        if (old.last() == ')')
+            old += "*"
+        old += entity.value
+        compute.postValue(old)
+        old = addParentheses(old)
+        evaluate(old)
+        enable.postValue(true)
+    }
+
+    private fun onXBehind(entity: Entity) {
+        var old = compute.value ?: ""
+        if (old.isNotEmpty() && old.last().isDigit())
+            old = "$old*"
+        old += entity.value.dropLast(1)
+        if (entity.value.endsWith('^')) {
+            old = "$old("
+            parentheses++
+        }
+        compute.postValue(old)
+        enable.postValue(true)
+        operator = true
+    }
+
+    private fun onOperator(entity: Entity) {
+        var old = compute.value!!
+        operator = true
+        if (old.last() == '(' && !(entity.value == "-" || entity.value == "+")) {
+        } else if (!(old.last().toString().matches(regexOperator) && old.last().toString() == entity.value)) {
+            if (old.last().toString().matches(regexOperator) && old.last().toString() != entity.value) {
+                old.dropLast(1)
+            }
+            old += entity.value
+            compute.postValue(old)
+            enable.postValue(true)
+        }
+    }
+
+    private fun onFactorial() {
+        var old = compute.value ?: ""
+        if (old.isNotEmpty()) {
+            if (old.last().isDigit()) {
+                old = "$old!"
+                compute.postValue(old)
+                val resultE = ExpressionBuilder(old)
+                    .operator(factorial())
+                    .build()
+                    .evaluate()
+                result.postValue(resultE.toString())
+                enable.postValue(true)
+            } else {
+                error.postValue(true)
+            }
+        }
+    }
+
+    private fun onScientificKeys(entity: Entity) {
+        val value = if (entity.value === "ctg") "1/tan"
+        else entity.value
+        var old = compute.value ?: ""
+        if (old.isNotEmpty() && old.last().isDigit())
+            old = "$old*"
+        old += "$value("
+        compute.postValue(old)
+        enable.postValue(true)
+        operator = true
+        parentheses++
+    }
+
+    private fun onPower(entity: Entity) {
+        var old = compute.value ?: ""
+        if (old.isNotEmpty()) {
+            if (old.last().isDigit() || old.takeLast(2) == "pi" || old.last() == 'e') {
+                old = "$old^("
+                if (entity.value.last().isDigit()) {
+                    old += entity.value.last() + ")"
+                    evaluate(old)
+                } else
+                    parentheses++
+                compute.postValue(old)
+                enable.postValue(true)
+            } else {
+                error.postValue(true)
+            }
+        }
+    }
+
+    private fun onSpecialCharacters(entity: Entity) {
+        var old = compute.value ?: ""
+        old += if (old.isEmpty() || old.last() == '(')
+            entity.value
+        else
+            "*" + entity.value
+        compute.postValue(old)
+        evaluate(old)
+        enable.postValue(true)
+    }
+
+    private fun onParentheses() {
+        var old = compute.value ?: ""
+        if (old.isEmpty() || old.last() == '(' || old.last().toString().matches(regexOperator)) {
+            old = "$old("
+            parentheses++
+        } else if (parentheses > 0) {
+            old = "$old)"
+            parentheses--
+        } else {
+            old = "$old*("
+            operator = true
+            parentheses++
+        }
+        compute.postValue(old)
+        enable.postValue(true)
+    }
+
+    private fun onClear() {
+        operator = false
+        parentheses = 0
+        compute.postValue("")
+        result.postValue("")
+        enable.postValue(false)
+    }
+
+    private fun onEqual() {
+        if (compute.value != null) {
+            var old = compute.value!!
+            if (old.last().toString().matches(regexOperator))
+                error.postValue(true)
+            else if (operator) {
+                old = addParentheses(old)
+                val resultC = ExpressionBuilder(old).build().evaluate().toString()
+                historyRepository.addHistory(History(old, resultC))
+                    .subscribeBy(onError = { Log.e("history", "Add history failed") },
+                        onComplete = { Log.e("history", "Add history success") })
+                compute.postValue(resultC)
+                result.postValue("")
+                operator = false
+                parentheses = 0
+                equal = true
+            }
+        }
+    }
+
+    private fun addParentheses(text: String): String {
+        var old = text
+        var continueP = parentheses
+        while (continueP > 0) {
+            old = "$old)"
+            continueP--
+        }
+        return old
     }
 
     private fun evaluate(expr: String) {
@@ -261,7 +256,7 @@ class CalculatorViewModel(private val historyRepository: IHistoryRepository, cal
         if (compute.value!!.last() == '(')
             parentheses--
         val value = compute.value!!.dropLast(1)
-        compute.postValue(SpannableString(value))
+        compute.postValue(value)
         result.postValue("")
         enable.postValue(value.isNotEmpty())
         operator = value.matches(regexExpression)
@@ -278,12 +273,12 @@ class CalculatorViewModel(private val historyRepository: IHistoryRepository, cal
 
     private fun historyClicked(value: String) {
         val old = compute.value ?: ""
-        compute.postValue(SpannableString(SpannableStringBuilder(old).append(value)))
+        compute.postValue(old + value)
         enable.postValue(true)
     }
 
     companion object {
-        val regex = "[+-/*%]".toRegex()
+        val regexOperator = "[+-/*%]".toRegex()
         val regexExpression = ".*[+-/*%]+.*".toRegex()
     }
 

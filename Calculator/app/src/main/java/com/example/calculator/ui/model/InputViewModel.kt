@@ -4,16 +4,16 @@ import com.example.calculator.business.model.Entity
 import com.example.calculator.ui.model.base.IItemViewModel
 
 
-interface INumberViewModel : IItemViewModel<Entity> {
+interface IInputViewModel : IItemViewModel<Entity> {
     val entity: Entity
     val title: String
     val color: Int
     val background: Int
 }
 
-class NumberViewModel(
+class InputViewModel(
     override val entity: Entity, override val color: Int,
-    override val background: Int, override val itemClick: (item: Entity) -> Unit) : INumberViewModel {
+    override val background: Int, override val itemClick: (item: Entity) -> Unit) : IInputViewModel {
 
     override val title: String
         get() = entity.value

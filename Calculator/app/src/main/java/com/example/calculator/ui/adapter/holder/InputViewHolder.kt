@@ -2,12 +2,12 @@ package com.example.calculator.ui.adapter.holder
 
 import com.example.calculator.databinding.ItemBinding
 import com.example.calculator.ui.adapter.holder.base.BaseViewHolder
-import com.example.calculator.ui.model.INumberViewModel
+import com.example.calculator.ui.model.IInputViewModel
 
 
-class NumberViewHolder(private val binding: ItemBinding) : BaseViewHolder<INumberViewModel>(binding.root) {
+class InputViewHolder(private val binding: ItemBinding) : BaseViewHolder<IInputViewModel>(binding.root) {
 
-    override fun bindData(item: INumberViewModel) {
+    override fun bindData(item: IInputViewModel) {
         binding.viewModel = item
         binding.executePendingBindings()
     }

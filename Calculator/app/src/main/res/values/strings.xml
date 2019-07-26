@@ -3,4 +3,5 @@
     <string name="history">History</string>
     <string name="ee">EE</string>
     <string name="clear_history">Clear history</string>
+    <string name="invalid">Invalid format</string>
 </resources>

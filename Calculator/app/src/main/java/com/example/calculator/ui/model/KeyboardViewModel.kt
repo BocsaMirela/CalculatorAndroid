@@ -10,13 +10,13 @@ import com.example.calculator.business.model.Entity
 import io.reactivex.rxkotlin.subscribeBy
 
 interface IKeyboardViewModel {
-    val items: LiveData<List<INumberViewModel>>
+    val items: LiveData<List<IInputViewModel>>
     val progress: LiveData<Boolean>
 }
 
 open class KeyboardViewModel(private val manager: ICalculatorManager) : IKeyboardViewModel, ViewModel() {
 
-    override val items: MutableLiveData<List<INumberViewModel>> by lazy { MutableLiveData<List<INumberViewModel>>() }
+    override val items: MutableLiveData<List<IInputViewModel>> by lazy { MutableLiveData<List<IInputViewModel>>() }
 
     final override val progress: MutableLiveData<Boolean> by lazy { MutableLiveData<Boolean>() }
 
@@ -35,22 +35,22 @@ open class KeyboardViewModel(private val manager: ICalculatorManager) : IKeyboar
         val result =
             inputs.map { entity ->
                 when {
-                    entity.type == Entity.Type.CLEAR -> NumberViewModel(
+                    entity.type == Entity.Type.CLEAR -> InputViewModel(
                         entity,
                         R.color.red,
                         R.color.white
                     ) { manager.setSelectedInput(entity) }
-                    entity.type == Entity.Type.EQUAL -> NumberViewModel(
+                    entity.type == Entity.Type.EQUAL -> InputViewModel(
                         entity,
                         R.color.white,
                         R.color.light_sky_blue
                     ) { manager.setSelectedInput(entity) }
-                    entity.type == Entity.Type.OPERATOR -> NumberViewModel(
+                    entity.type == Entity.Type.OPERATOR -> InputViewModel(
                         entity,
                         R.color.light_sky_blue,
                         R.color.white
                     ) { manager.setSelectedInput(entity) }
-                    else -> NumberViewModel(entity, R.color.black, R.color.white) { manager.setSelectedInput(entity) }
+                    else -> InputViewModel(entity, R.color.black, R.color.white) { manager.setSelectedInput(entity) }
                 }
             }
         items.postValue(result)

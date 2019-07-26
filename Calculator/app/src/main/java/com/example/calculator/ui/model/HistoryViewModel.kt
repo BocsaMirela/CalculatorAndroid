@@ -13,19 +13,16 @@ import io.reactivex.rxkotlin.subscribeBy
 import java.lang.IllegalArgumentException
 
 interface IHistoryViewModel {
-    val computeUpdate: LiveData<String>
-    val resultUpdate: LiveData<String>
     val items: LiveData<List<HistoryItemViewModel>>
     fun onClear()
 }
 
-class HistoryViewModel(private val historyRepository: IHistoryRepository, private val calculatorManager: ICalculatorManager) : IHistoryViewModel, ViewModel() {
+class HistoryViewModel(
+    private val historyRepository: IHistoryRepository,
+    private val calculatorManager: ICalculatorManager
+) : IHistoryViewModel, ViewModel() {
 
     override val items: MutableLiveData<List<HistoryItemViewModel>> by lazy { MutableLiveData<List<HistoryItemViewModel>>() }
-
-    override val computeUpdate: MutableLiveData<String> by lazy { MutableLiveData<String>() }
-
-    override val resultUpdate: MutableLiveData<String> by lazy { MutableLiveData<String>() }
 
     init {
         historyRepository.histories.subscribeBy(onNext = { list ->
@@ -41,18 +38,21 @@ class HistoryViewModel(private val historyRepository: IHistoryRepository, privat
     }
 
     override fun onClear() {
-        historyRepository.deleteAll().subscribeBy(onError = { Log.e("history", "Delete history failed") }, onComplete = {})
+        historyRepository.deleteAll().subscribeBy(onError = { Log.e("history", "Delete history failed") },
+            onComplete = { Log.e("history", "Delete history completed") })
     }
-
 
 }
 
-class HistoryViewModelFactory(private val historyRepository: IHistoryRepository,private val calculatorManager: ICalculatorManager) : ViewModelProvider.Factory {
+class HistoryViewModelFactory(
+    private val historyRepository: IHistoryRepository,
+    private val calculatorManager: ICalculatorManager
+) : ViewModelProvider.Factory {
 
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel?> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(HistoryViewModel::class.java))
-            return HistoryViewModel(historyRepository,calculatorManager) as T
+            return HistoryViewModel(historyRepository, calculatorManager) as T
         throw IllegalArgumentException("Unknown ViewModel class")
     }
 
